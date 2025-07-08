@@ -62,7 +62,9 @@ def get_readable_filename(filename):
 def load_and_process_data(input_file):
     """Load and process the selected CSV file"""
     try:
-        github_url = f"https://raw.githubusercontent.com/MikelWL/personalised_mltc/blob/development/data/{input_file}"
+        # Use secrets configuration or default to main branch
+        branch = st.secrets.get('github_branch', 'main')
+        github_url = f"https://raw.githubusercontent.com/MikelWL/personalised_mltc/{branch}/data/{input_file}"
         print(f"Attempting to load from URL: {github_url}")  # Debug print
         try:
             response = requests.get(github_url)
