@@ -17,44 +17,44 @@ import requests
 from io import StringIO
 
 CSV_FILES = [
-    'Females_45to64.csv',
-    'Females_65plus.csv', 
-    'Females_below45.csv',
-    'Males_45to64.csv',
-    'Males_65plus.csv',
-    'Males_below45.csv',
-    'FEMALE_45to64_SAIL.csv',
-    'SAIL_FEMALE_65plus.csv',
-    'SAIL_FEMALE_below45.csv',    
-    'SAIL_MALE_45to64.csv',
-    'SAIL_MALE_65plus.csv',
-    'SAIL_MALE_below45.csv'
+    'Females_45to64_preprocessed.csv',
+    'Females_65plus_preprocessed.csv', 
+    'Females_below45_preprocessed.csv',
+    'Males_45to64_preprocessed.csv',
+    'Males_65plus_preprocessed.csv',
+    'Males_below45_preprocessed.csv',
+    'FEMALE_45to64_SAIL_preprocessed.csv',
+    'SAIL_FEMALE_65plus_preprocessed.csv',
+    'SAIL_FEMALE_below45_preprocessed.csv',    
+    'SAIL_MALE_45to64_preprocessed.csv',
+    'SAIL_MALE_65plus_preprocessed.csv',
+    'SAIL_MALE_below45_preprocessed.csv'
     ]
 
 def get_readable_filename(filename):
-    if filename == 'Females_45to64.csv':
+    if filename == 'Females_45to64_preprocessed.csv':
         return 'Females 45 to 64 years'
-    elif filename == 'Females_65plus.csv':
+    elif filename == 'Females_65plus_preprocessed.csv':
         return 'Females 65 years and over'
-    elif filename == 'Females_below45.csv':
+    elif filename == 'Females_below45_preprocessed.csv':
         return 'Females below 45 years'
-    elif filename == 'Males_45to64.csv':
+    elif filename == 'Males_45to64_preprocessed.csv':
         return 'Males 45 to 64 years'
-    elif filename == 'Males_65plus.csv':
+    elif filename == 'Males_65plus_preprocessed.csv':
         return 'Males 65 years and over'
-    elif filename == 'Males_below45.csv':
+    elif filename == 'Males_below45_preprocessed.csv':
         return 'Males below 45 years'
-    if filename == 'FEMALE_45to64_SAIL.csv':
+    if filename == 'FEMALE_45to64_SAIL_preprocessed.csv':
         return 'Females 45 to 64 years SAIL'
-    elif filename == 'SAIL_FEMALE_65plus.csv':
+    elif filename == 'SAIL_FEMALE_65plus_preprocessed.csv':
         return 'SAIL Females 65 years and over'
-    elif filename == 'SAIL_FEMALE_below45.csv':
+    elif filename == 'SAIL_FEMALE_below45_preprocessed.csv':
         return 'SAIL Females below 45 years'
-    elif filename == 'SAIL_MALE_45to64.csv':
+    elif filename == 'SAIL_MALE_45to64_preprocessed.csv':
         return 'SAIL Males 45 to 64 years'
-    elif filename == 'SAIL_MALE_65plus.csv':
+    elif filename == 'SAIL_MALE_65plus_preprocessed.csv':
         return 'SAIL Males 65 years and over'
-    elif filename == 'SAIL_MALE_below45.csv':
+    elif filename == 'SAIL_MALE_below45_preprocessed.csv':
         return 'SAIL Males below 45 years'
     else:
         return filename
@@ -62,7 +62,7 @@ def get_readable_filename(filename):
 def load_and_process_data(input_file):
     """Load and process the selected CSV file"""
     try:
-        github_url = f"https://raw.githubusercontent.com/gcosma/personalised_mltc/main/data/{input_file}"
+        github_url = f"https://raw.githubusercontent.com/MikelWL/personalised_mltc/blob/development/data/{input_file}"
         print(f"Attempting to load from URL: {github_url}")  # Debug print
         try:
             response = requests.get(github_url)
