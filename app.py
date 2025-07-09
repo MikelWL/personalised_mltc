@@ -20,7 +20,9 @@ from modules.cross_population import (
     get_combined_dataset_options, 
     get_readable_combined_filename,
     is_combined_dataset,
-    load_combined_dataset
+    load_combined_dataset,
+    is_combined_dataset_data,
+    analyze_condition_combinations_cross_population
 )
 
 # Individual dataset files
@@ -1557,25 +1559,62 @@ def main():
                                     st.session_state.combinations_results = None
                                     st.session_state.combinations_fig = None
                                     
-                                    # Generate new results
-                                    results_df = analyze_condition_combinations(
-                                        data,
-                                        min_percentage,
-                                        min_frequency
-                                    )
+                                    # Generate new results - use cross-population analysis for combined datasets
+                                    if is_combined_dataset_data(data):
+                                        results_df = analyze_condition_combinations_cross_population(
+                                            data,
+                                            min_percentage,
+                                            min_frequency,
+                                            analyze_condition_combinations
+                                        )
+                                    else:
+                                        # Use supervisor's original function for single datasets
+                                        results_df = analyze_condition_combinations(
+                                            data,
+                                            min_percentage,
+                                            min_frequency
+                                        )
 
                                     if not results_df.empty:
                                         st.session_state.combinations_results = results_df
                                         
+                                        # Add explanatory text for combined datasets
+                                        if is_combined_dataset_data(data):
+                                            st.info("""**Column Abbreviations:** 
+- **Num:** Number of conditions in the combination.
+- **Rank Diff:** CPRD Rank - SAIL Rank. Positive value indicates a higher rank in CPRD vs. SAIL; negative indicates the reverse.
+- **MPF:** Minimum Pair Frequency. 
+- **%:** Prevalence Percentage. 
+- **OR:** Odds Ratio.""")
+                                        
                                         st.subheader(f"Analysis Results ({len(results_df)} combinations)")
-                                        st.dataframe(
-                                            results_df.style.background_gradient(
+                                        
+                                        # Apply appropriate styling based on dataset type
+                                        if is_combined_dataset_data(data):
+                                            # Style cross-population results with multiple prevalence columns
+                                            styled_df = results_df.style.background_gradient(
+                                                cmap='YlOrRd',
+                                                subset=['CPRD %', 'SAIL %', 'Both %']
+                                            )
+                                        else:
+                                            # Style single-population results (original behavior)
+                                            styled_df = results_df.style.background_gradient(
                                                 cmap='YlOrRd',
                                                 subset=['Prevalence of the combination (%)']
                                             )
-                                        )
+                                        
+                                        st.dataframe(styled_df)
 
-                                        fig = create_combinations_plot(results_df)
+                                        # Create plot with appropriate column based on dataset type
+                                        if is_combined_dataset_data(data):
+                                            # For combined datasets, create a modified DataFrame for plotting
+                                            plot_df = results_df.copy()
+                                            plot_df['Prevalence of the combination (%)'] = plot_df['Both %']
+                                            fig = create_combinations_plot(plot_df)
+                                        else:
+                                            # Use original plotting for single datasets
+                                            fig = create_combinations_plot(results_df)
+                                        
                                         st.session_state.combinations_fig = fig
                                         st.pyplot(fig)
 
@@ -1592,13 +1631,33 @@ def main():
                             # Display existing results if available
                             elif st.session_state.combinations_results is not None:
                                 results_df = st.session_state.combinations_results
+                                
+                                # Add explanatory text for combined datasets
+                                if is_combined_dataset_data(data):
+                                    st.info("""**Column Abbreviations:** 
+- **Num:** Number of conditions in the combination.
+- **Rank Diff:** CPRD Rank - SAIL Rank. Positive value indicates a higher rank in CPRD vs. SAIL; negative indicates the reverse.
+- **MPF:** Minimum Pair Frequency. 
+- **%:** Prevalence Percentage. 
+- **OR:** Odds Ratio.""")
+                                
                                 st.subheader(f"Analysis Results ({len(results_df)} combinations)")
-                                st.dataframe(
-                                    results_df.style.background_gradient(
+                                
+                                # Apply appropriate styling based on dataset type
+                                if is_combined_dataset_data(data):
+                                    # Style cross-population results with multiple prevalence columns
+                                    styled_df = results_df.style.background_gradient(
+                                        cmap='YlOrRd',
+                                        subset=['CPRD %', 'SAIL %', 'Both %']
+                                    )
+                                else:
+                                    # Style single-population results (original behavior)
+                                    styled_df = results_df.style.background_gradient(
                                         cmap='YlOrRd',
                                         subset=['Prevalence of the combination (%)']
                                     )
-                                )
+                                
+                                st.dataframe(styled_df)
 
                                 if st.session_state.combinations_fig is not None:
                                     st.pyplot(st.session_state.combinations_fig)

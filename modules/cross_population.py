@@ -148,6 +148,8 @@ def load_combined_dataset(combined_id, load_function):
 def combine_datasets_naive(cprd_data, sail_data):
     """
     Perform naive concatenation of CPRD and SAIL datasets.
+    This version no longer overwrites the TotalPatientsInGroup column,
+    preserving the original patient counts for each subset.
     
     Args:
         cprd_data (pd.DataFrame): CPRD dataset
@@ -163,14 +165,8 @@ def combine_datasets_naive(cprd_data, sail_data):
     cprd_data_labeled['PopulationSource'] = 'CPRD'
     sail_data_labeled['PopulationSource'] = 'SAIL'
     
-    # Concatenate datasets
+    # Concatenate datasets, preserving original TotalPatientsInGroup values
     combined_data = pd.concat([cprd_data_labeled, sail_data_labeled], ignore_index=True)
-    
-    # Update TotalPatientsInGroup to reflect combined population
-    if 'TotalPatientsInGroup' in combined_data.columns:
-        cprd_total = cprd_data['TotalPatientsInGroup'].iloc[0] if not cprd_data.empty else 0
-        sail_total = sail_data['TotalPatientsInGroup'].iloc[0] if not sail_data.empty else 0
-        combined_data['TotalPatientsInGroup'] = cprd_total + sail_total
     
     return combined_data
 
@@ -216,3 +212,139 @@ def get_unavailable_feature_message(feature_name):
     Combined dataset analysis requires specialized statistical methods to properly 
     account for population differences and ensure valid comparisons.
     """
+
+
+def is_combined_dataset_data(data):
+    """
+    Check if a loaded dataset is a combined dataset based on its structure.
+    
+    Args:
+        data (pd.DataFrame): Loaded dataset
+        
+    Returns:
+        bool: True if combined dataset, False otherwise
+    """
+    return 'PopulationSource' in data.columns
+
+
+def analyze_condition_combinations_cross_population(data, min_percentage, min_frequency, original_analysis_func):
+    """
+    Analyze condition combinations across populations with comparative metrics.
+    This version correctly handles the total patient counts for each subset.
+    
+    Args:
+        data (pd.DataFrame): Combined dataset with PopulationSource column
+        min_percentage (float): Minimum prevalence threshold
+        min_frequency (int): Minimum pair frequency threshold
+        original_analysis_func (callable): Original single-population analysis function
+        
+    Returns:
+        pd.DataFrame: Cross-population analysis results with CPRD, SAIL, and Combined columns
+    """
+    # Split data by population source
+    cprd_data = data[data['PopulationSource'] == 'CPRD'].copy()
+    sail_data = data[data['PopulationSource'] == 'SAIL'].copy()
+    
+    # Run original analysis function on each subset (they have correct, separate totals)
+    cprd_results = original_analysis_func(cprd_data, min_percentage, min_frequency)
+    sail_results = original_analysis_func(sail_data, min_percentage, min_frequency)
+    
+    # Add rank columns based on prevalence before merging
+    if not cprd_results.empty:
+        cprd_results['CPRD Rank'] = cprd_results['Prevalence of the combination (%)'].rank(method='min', ascending=False).astype(int)
+    if not sail_results.empty:
+        sail_results['SAIL Rank'] = sail_results['Prevalence of the combination (%)'].rank(method='min', ascending=False).astype(int)
+
+    # For the combined analysis, we must first create a temporary dataframe
+    # with the correct combined total patient count.
+    combined_analysis_data = data.copy()
+    cprd_total = cprd_data['TotalPatientsInGroup'].iloc[0] if not cprd_data.empty else 0
+    sail_total = sail_data['TotalPatientsInGroup'].iloc[0] if not sail_data.empty else 0
+    combined_analysis_data['TotalPatientsInGroup'] = cprd_total + sail_total
+    
+    combined_results = original_analysis_func(combined_analysis_data, min_percentage, min_frequency)
+    
+    # Merge results into comparative format
+    return merge_cross_population_results(cprd_results, sail_results, combined_results)
+
+
+def merge_cross_population_results(cprd_results, sail_results, combined_results):
+    """
+    Merge results from CPRD, SAIL, and combined analyses into comparative format.
+    This version includes rank comparison columns and uses 'Both' instead of 'Combined'.
+
+    Args:
+        cprd_results (pd.DataFrame): CPRD analysis results with rank
+        sail_results (pd.DataFrame): SAIL analysis results with rank
+        combined_results (pd.DataFrame): Combined analysis results
+        
+    Returns:
+        pd.DataFrame: Merged results with cross-population comparison columns
+    """
+    # Create dictionaries for easy lookup
+    cprd_dict = {row['Combination']: row for _, row in cprd_results.iterrows()}
+    sail_dict = {row['Combination']: row for _, row in sail_results.iterrows()}
+    combined_dict = {row['Combination']: row for _, row in combined_results.iterrows()}
+    
+    # Get all unique combinations that appear in the combined results
+    all_combinations = combined_dict.keys()
+    
+    # Build merged results
+    merged_results = []
+    
+    for combination in all_combinations:
+        cprd_row = cprd_dict.get(combination)
+        sail_row = sail_dict.get(combination)
+        combined_row = combined_dict.get(combination)
+        
+        # This check is redundant if all_combinations is from combined_dict, but safe to keep
+        if combined_row is None:
+            continue
+
+        # Calculate ranks and difference
+        cprd_rank = cprd_row['CPRD Rank'] if cprd_row is not None else None
+        sail_rank = sail_row['SAIL Rank'] if sail_row is not None else None
+        
+        rank_diff = None
+        if cprd_rank is not None and sail_rank is not None:
+            rank_diff = cprd_rank - sail_rank
+
+        # Build merged row
+        merged_row = {
+            'Combination': combination,
+            'Num': combined_row['NumConditions'],
+            'CPRD Rank': cprd_rank,
+            'SAIL Rank': sail_rank,
+            'Rank Diff': rank_diff,
+            
+            # Minimum Pair Frequency columns
+            'CPRD MPF': cprd_row['Minimum Pair Frequency'] if cprd_row is not None else 0,
+            'SAIL MPF': sail_row['Minimum Pair Frequency'] if sail_row is not None else 0,
+            'Both MPF': combined_row['Minimum Pair Frequency'],
+            
+            # Prevalence percentage columns
+            'CPRD %': cprd_row['Prevalence of the combination (%)'] if cprd_row is not None else 0.0,
+            'SAIL %': sail_row['Prevalence of the combination (%)'] if sail_row is not None else 0.0,
+            'Both %': combined_row['Prevalence of the combination (%)'],
+            
+            # Odds ratio columns
+            'CPRD OR': cprd_row['Total odds ratio'] if cprd_row is not None else 0.0,
+            'SAIL OR': sail_row['Total odds ratio'] if sail_row is not None else 0.0,
+            'Both OR': combined_row['Total odds ratio']
+        }
+        
+        merged_results.append(merged_row)
+    
+    # Create DataFrame and sort by combined prevalence
+    merged_df = pd.DataFrame(merged_results)
+    
+    # Handle potential empty DataFrame
+    if not merged_df.empty:
+        merged_df = merged_df.sort_values('Both %', ascending=False)
+        # Format rank columns to be integers, filling NaNs with a placeholder
+        rank_cols = ['CPRD Rank', 'SAIL Rank', 'Rank Diff']
+        for col in rank_cols:
+            # Use a placeholder for missing ranks, e.g., '-'
+            merged_df[col] = pd.to_numeric(merged_df[col], errors='coerce').astype('Int64')
+
+    return merged_df
