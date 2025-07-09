@@ -17,18 +17,18 @@ import requests
 from io import StringIO
 
 CSV_FILES = [
-    'Females_45to64_preprocessed.csv',
-    'Females_65plus_preprocessed.csv', 
-    'Females_below45_preprocessed.csv',
-    'Males_45to64_preprocessed.csv',
-    'Males_65plus_preprocessed.csv',
-    'Males_below45_preprocessed.csv',
-    'FEMALE_45to64_SAIL_preprocessed.csv',
-    'SAIL_FEMALE_65plus_preprocessed.csv',
-    'SAIL_FEMALE_below45_preprocessed.csv',    
-    'SAIL_MALE_45to64_preprocessed.csv',
-    'SAIL_MALE_65plus_preprocessed.csv',
-    'SAIL_MALE_below45_preprocessed.csv'
+    'Females_45to64.csv',
+    'Females_65plus.csv', 
+    'Females_below45.csv',
+    'Males_45to64.csv',
+    'Males_65plus.csv',
+    'Males_below45.csv',
+    'SAIL_FEMALES_45to64.csv',
+    'SAIL_FEMALES_65plus.csv',
+    'SAIL_FEMALES_below45.csv',    
+    'SAIL_MALES_45to64.csv',
+    'SAIL_MALES_65plus.csv',
+    'SAIL_MALES_below45.csv'
     ]
 
 def get_readable_filename(filename):
@@ -44,17 +44,17 @@ def get_readable_filename(filename):
         return 'Males 65 years and over'
     elif filename == 'Males_below45_preprocessed.csv':
         return 'Males below 45 years'
-    if filename == 'FEMALE_45to64_SAIL_preprocessed.csv':
-        return 'Females 45 to 64 years SAIL'
-    elif filename == 'SAIL_FEMALE_65plus_preprocessed.csv':
+    if filename == 'SAIL_FEMALES_45to64.csv':
+        return 'SAIL Females 45 to 64 years'
+    elif filename == 'SAIL_FEMALES_65plus.csv':
         return 'SAIL Females 65 years and over'
-    elif filename == 'SAIL_FEMALE_below45_preprocessed.csv':
+    elif filename == 'SAIL_FEMALES_below45.csv':
         return 'SAIL Females below 45 years'
-    elif filename == 'SAIL_MALE_45to64_preprocessed.csv':
+    elif filename == 'SAIL_MALES_45to64.csv':
         return 'SAIL Males 45 to 64 years'
-    elif filename == 'SAIL_MALE_65plus_preprocessed.csv':
+    elif filename == 'SAIL_MALES_65plus.csv':
         return 'SAIL Males 65 years and over'
-    elif filename == 'SAIL_MALE_below45_preprocessed.csv':
+    elif filename == 'SAIL_MALES_below45.csv':
         return 'SAIL Males below 45 years'
     else:
         return filename
