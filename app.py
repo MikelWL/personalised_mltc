@@ -16,8 +16,15 @@ from itertools import combinations
 import requests
 from io import StringIO
 from modules.preprocessing import preprocess_dataframe
+from modules.cross_population import (
+    get_combined_dataset_options, 
+    get_readable_combined_filename,
+    is_combined_dataset,
+    load_combined_dataset
+)
 
-CSV_FILES = [
+# Individual dataset files
+INDIVIDUAL_CSV_FILES = [
     'Females_45to64.csv',
     'Females_65plus.csv', 
     'Females_below45.csv',
@@ -32,7 +39,15 @@ CSV_FILES = [
     'SAIL_MALES_below45.csv'
     ]
 
+# Combined dataset options + individual files
+CSV_FILES = get_combined_dataset_options() + INDIVIDUAL_CSV_FILES
+
 def get_readable_filename(filename):
+    # Handle combined datasets
+    if is_combined_dataset(filename):
+        return get_readable_combined_filename(filename)
+    
+    # Handle individual datasets
     if filename == 'Females_45to64.csv':
         return 'Females 45 to 64 years'
     elif filename == 'Females_65plus.csv':
@@ -61,8 +76,13 @@ def get_readable_filename(filename):
         return filename
 
 def load_and_process_data(input_file):
-    """Load and process the selected CSV file"""
+    """Load and process the selected CSV file or combined dataset"""
     try:
+        # Handle combined datasets
+        if is_combined_dataset(input_file):
+            return load_combined_dataset(input_file, load_and_process_data)
+        
+        # Handle individual datasets
         # Use secrets configuration or default to main branch
         branch = st.secrets.get('github_branch', 'main')
         github_url = f"https://raw.githubusercontent.com/MikelWL/personalised_mltc/{branch}/data/{input_file}"
