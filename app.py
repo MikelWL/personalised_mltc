@@ -15,6 +15,7 @@ from matplotlib import patches
 from itertools import combinations
 import requests
 from io import StringIO
+from modules.preprocessing import preprocess_dataframe
 
 CSV_FILES = [
     'Females_45to64.csv',
@@ -71,6 +72,9 @@ def load_and_process_data(input_file):
             response.raise_for_status()  # Raise an exception for bad status codes  
             print(f"Response status code: {response.status_code}")  # Debug print
             data = pd.read_csv(StringIO(response.text))
+            
+            # Apply preprocessing to clean up condition names (first two columns)
+            data = preprocess_dataframe(data, columns=[0, 1])
         except Exception as e:
             print(f"Error fetching data: {str(e)}")  # Debug print   
             raise

@@ -34,6 +34,44 @@ def convert_text_case(text):
     return " ".join(processed_words)
 
 
+def preprocess_dataframe(df, *, columns):
+    """
+    Apply preprocessing to specified columns of a DataFrame in memory.
+    Converts specified columns to proper case.
+    
+    Args:
+        df (pd.DataFrame): Input DataFrame
+        columns (list of int): Column indices to preprocess (must be keyword argument)
+        
+    Returns:
+        pd.DataFrame: Preprocessed DataFrame with modified specified columns
+    """
+    if df.empty:
+        return df
+    
+    # Validate columns parameter
+    if not isinstance(columns, list) or not all(isinstance(col, int) for col in columns):
+        raise ValueError("columns must be a list of integers")
+    
+    # Get column names
+    df_columns = df.columns.tolist()
+    
+    # Check if all specified column indices are valid
+    for col_idx in columns:
+        if col_idx < 0 or col_idx >= len(df_columns):
+            raise ValueError(f"Column index {col_idx} is out of range. DataFrame has {len(df_columns)} columns.")
+    
+    # Create a copy to avoid modifying the original
+    df_processed = df.copy()
+    
+    # Apply text case conversion to specified columns
+    for col_idx in columns:
+        col_name = df_columns[col_idx]
+        df_processed[col_name] = df_processed[col_name].apply(convert_text_case)
+    
+    return df_processed
+
+
 def preprocess_csv(csv_path, save_file=False, output_path=None):
     """
     Preprocess a CSV file by converting the first and second columns to proper case.
