@@ -32,17 +32,17 @@ CSV_FILES = [
     ]
 
 def get_readable_filename(filename):
-    if filename == 'Females_45to64_preprocessed.csv':
+    if filename == 'Females_45to64.csv':
         return 'Females 45 to 64 years'
-    elif filename == 'Females_65plus_preprocessed.csv':
+    elif filename == 'Females_65plus.csv':
         return 'Females 65 years and over'
-    elif filename == 'Females_below45_preprocessed.csv':
+    elif filename == 'Females_below45.csv':
         return 'Females below 45 years'
-    elif filename == 'Males_45to64_preprocessed.csv':
+    elif filename == 'Males_45to64.csv':
         return 'Males 45 to 64 years'
-    elif filename == 'Males_65plus_preprocessed.csv':
+    elif filename == 'Males_65plus.csv':
         return 'Males 65 years and over'
-    elif filename == 'Males_below45_preprocessed.csv':
+    elif filename == 'Males_below45.csv':
         return 'Males below 45 years'
     if filename == 'SAIL_FEMALES_45to64.csv':
         return 'SAIL Females 45 to 64 years'
