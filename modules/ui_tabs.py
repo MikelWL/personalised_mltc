@@ -144,6 +144,10 @@ def render_combinations_tab(data):
                 )
                 st.session_state.min_percentage = min_percentage
 
+                show_shared_only = False
+                if is_combined_dataset_data(data):
+                    show_shared_only = st.checkbox("Show only shared combinations", value=False, help="Filter out combinations not present in both CPRD and SAIL populations")
+
                 analyse_combinations_button = st.button(
                     "🔍 Analyse Combinations",
                     help="Click to analyse condition combinations"
@@ -166,7 +170,8 @@ def render_combinations_tab(data):
                             data,
                             min_percentage,
                             min_frequency,
-                            analyze_condition_combinations
+                            analyze_condition_combinations,
+                            shared_only=show_shared_only
                         )
                     else:
                         # Use supervisor's original function for single datasets

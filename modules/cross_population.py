@@ -227,7 +227,7 @@ def is_combined_dataset_data(data):
     return 'PopulationSource' in data.columns
 
 
-def analyze_condition_combinations_cross_population(data, min_percentage, min_frequency, original_analysis_func):
+def analyze_condition_combinations_cross_population(data, min_percentage, min_frequency, original_analysis_func, shared_only=False):
     """
     Analyze condition combinations across populations with comparative metrics.
     This version correctly handles the total patient counts for each subset.
@@ -237,6 +237,7 @@ def analyze_condition_combinations_cross_population(data, min_percentage, min_fr
         min_percentage (float): Minimum prevalence threshold
         min_frequency (int): Minimum pair frequency threshold
         original_analysis_func (callable): Original single-population analysis function
+        shared_only (bool): If True, only show combinations present in both populations.
         
     Returns:
         pd.DataFrame: Cross-population analysis results with CPRD, SAIL, and Combined columns
@@ -265,18 +266,20 @@ def analyze_condition_combinations_cross_population(data, min_percentage, min_fr
     combined_results = original_analysis_func(combined_analysis_data, min_percentage, min_frequency)
     
     # Merge results into comparative format
-    return merge_cross_population_results(cprd_results, sail_results, combined_results)
+    return merge_cross_population_results(cprd_results, sail_results, combined_results, shared_only)
 
 
-def merge_cross_population_results(cprd_results, sail_results, combined_results):
+def merge_cross_population_results(cprd_results, sail_results, combined_results, shared_only=False):
     """
     Merge results from CPRD, SAIL, and combined analyses into comparative format.
     This version includes rank comparison columns and uses 'Both' instead of 'Combined'.
+    Optionally filters to show only combinations present in both populations and re-ranks.
 
     Args:
         cprd_results (pd.DataFrame): CPRD analysis results with rank
         sail_results (pd.DataFrame): SAIL analysis results with rank
         combined_results (pd.DataFrame): Combined analysis results
+        shared_only (bool): If True, only show combinations present in both populations.
         
     Returns:
         pd.DataFrame: Merged results with cross-population comparison columns
@@ -300,6 +303,11 @@ def merge_cross_population_results(cprd_results, sail_results, combined_results)
         # This check is redundant if all_combinations is from combined_dict, but safe to keep
         if combined_row is None:
             continue
+
+        # Apply shared_only filter
+        if shared_only:
+            if cprd_row is None or sail_row is None:
+                continue # Skip if not present in both
 
         # Calculate ranks and difference
         cprd_rank = cprd_row['CPRD Rank'] if cprd_row is not None else None
@@ -340,6 +348,13 @@ def merge_cross_population_results(cprd_results, sail_results, combined_results)
     
     # Handle potential empty DataFrame
     if not merged_df.empty:
+        # Re-calculate ranks if shared_only filter was applied
+        if shared_only:
+            if not merged_df.empty:
+                merged_df['CPRD Rank'] = merged_df['CPRD %'].rank(method='min', ascending=False).astype(int)
+                merged_df['SAIL Rank'] = merged_df['SAIL %'].rank(method='min', ascending=False).astype(int)
+                merged_df['Rank Diff'] = merged_df['CPRD Rank'] - merged_df['SAIL Rank']
+
         merged_df = merged_df.sort_values('Both %', ascending=False)
         # Format rank columns to be integers, filling NaNs with a placeholder
         rank_cols = ['CPRD Rank', 'SAIL Rank', 'Rank Diff']

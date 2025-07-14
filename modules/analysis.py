@@ -65,19 +65,39 @@ def analyze_condition_combinations(data, min_percentage, min_frequency):
         (data['PairFrequency'] >= min_frequency)
     ].copy()
 
-    # Clean condition names
+    # Standardize condition order for consistent grouping
+    def standardize_conditions_local(df):
+        df_copy = df.copy()
+        mask = df_copy['ConditionA'] > df_copy['ConditionB']
+        df_copy.loc[mask, ['ConditionA', 'ConditionB']] = df_copy.loc[mask, ['ConditionB', 'ConditionA']].values
+        return df_copy
+
+    filtered_data_standardized = standardize_conditions_local(filtered_data)
+
+    # Aggregate duplicate pairs by summing PairFrequency
+    # For other columns, we'll take the first available value (arbitrary, as they are recalculated later)
+    aggregated_data = filtered_data_standardized.groupby(['ConditionA', 'ConditionB'], as_index=False).agg(
+        PairFrequency=('PairFrequency', 'sum'),
+        OddsRatio=('OddsRatio', 'first'), # These are just placeholders for the filter, will be recalculated
+        Percentage=('Percentage', 'first'), # These are just placeholders for the filter, will be recalculated
+        MedianDurationYearsWithIQR=('MedianDurationYearsWithIQR', 'first'),
+        DirectionalPercentage=('DirectionalPercentage', 'first'),
+        Precedence=('Precedence', 'first')
+    )
+
+    # Clean condition names (apply to aggregated data)
     for col in ['ConditionA', 'ConditionB']:
-        filtered_data[col] = (filtered_data[col]
+        aggregated_data[col] = (aggregated_data[col]
                             .str.replace(r'\s*\([^)]*\)', '', regex=True)
                             .str.replace('_', ' '))
 
-    unique_conditions = pd.unique(filtered_data[['ConditionA', 'ConditionB']].values.ravel('K'))
+    unique_conditions = pd.unique(aggregated_data[['ConditionA', 'ConditionB']].values.ravel('K'))
 
     # Calculate frequencies
     pair_frequency_map = {}
     condition_frequency_map = {}
 
-    for _, row in filtered_data.iterrows():
+    for _, row in aggregated_data.iterrows(): # Use aggregated_data here
         for key in [f"{row['ConditionA']}_{row['ConditionB']}",
                    f"{row['ConditionB']}_{row['ConditionA']}"]:
             pair_frequency_map[key] = row['PairFrequency']
