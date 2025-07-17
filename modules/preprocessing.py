@@ -5,18 +5,29 @@ from pathlib import Path
 
 def convert_text_case(text):
     """
-    Convert text to title case with specific handling for acronyms.
+    Convert text to title case with specific handling for acronyms and abbreviation expansion.
     
     Args:
         text (str): Input text to convert
         
     Returns:
-        str: Converted text with proper casing
+        str: Converted text with proper casing and expanded abbreviations
     """
     if pd.isna(text) or text == "":
         return text
     
-    # Define acronyms that should remain uppercase
+    # Define abbreviation mappings (abbreviation -> full form)
+    abbreviation_mappings = {
+        "CKD": "Chronic Kidney Disease",
+        "IBD": "Inflammatory Bowel Disease"
+    }
+    
+    # First, check if the entire text is an abbreviation that should be expanded
+    text_upper = str(text).upper().strip()
+    if text_upper in abbreviation_mappings:
+        return abbreviation_mappings[text_upper]
+    
+    # Define acronyms that should remain uppercase (for other cases)
     acronyms = {"CKD", "IBD"}
     
     # Split by spaces and process each word
@@ -24,9 +35,13 @@ def convert_text_case(text):
     processed_words = []
     
     for word in words:
+        # Check if the word is an abbreviation that should be expanded
+        word_upper = word.upper()
+        if word_upper in abbreviation_mappings:
+            processed_words.append(abbreviation_mappings[word_upper])
         # Check if the word is an acronym (case-insensitive)
-        if word.upper() in acronyms:
-            processed_words.append(word.upper())
+        elif word_upper in acronyms:
+            processed_words.append(word_upper)
         else:
             # Convert to title case (first letter uppercase, rest lowercase)
             processed_words.append(word.capitalize())
@@ -183,7 +198,11 @@ if __name__ == "__main__":
         "IBD RELATED CONDITIONS", 
         "CKD STAGE 3",
         "diabetes mellitus",
-        "INFLAMMATORY BOWEL DISEASE"
+        "INFLAMMATORY BOWEL DISEASE",
+        "IBD",  # Test standalone abbreviation
+        "CKD",  # Test standalone abbreviation
+        "ibd",  # Test lowercase abbreviation
+        "ckd"   # Test lowercase abbreviation
     ]
     
     print("Testing text case conversion:")
