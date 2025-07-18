@@ -93,14 +93,13 @@ def get_component_files(combined_id):
     
     demo_code = combined_id.replace('COMBINED_', '')
     
-    # CPRD file (no prefix)
-    cprd_file = f"{demo_code}.csv"
+    # CPRD file (CPRD_ prefix)
+    cprd_file = f"CPRD_{demo_code}.csv"
     
-    # SAIL file (SAIL_ prefix, with gender format adjustment)
+    # SAIL file (SAIL_ prefix, with standard case)
     if demo_code.startswith('Females_') or demo_code.startswith('Males_'):
-        # Convert Females_45to64 -> SAIL_FEMALES_45to64
-        gender, age_group = demo_code.split('_', 1)
-        sail_file = f"SAIL_{gender.upper()}_{age_group}.csv"
+        # Convert Females_45to64 -> SAIL_Females_45to64
+        sail_file = f"SAIL_{demo_code}.csv"
     else:
         sail_file = f"SAIL_{demo_code}.csv"
     
