@@ -28,6 +28,7 @@ condition_categories = {
     "Heart Failure": "Circulatory",
     "Hypertension": "Circulatory",
     "Peripheral Vascular Disease": "Circulatory",
+    "PVD": "Circulatory",
     "Stroke": "Circulatory",
     "Barretts Oesophagus": "Digestive",
     "Chronic Constipation": "Digestive",
