@@ -279,18 +279,10 @@ def render_combinations_tab(data):
                         st.subheader(f"Analysis Results ({len(results_df)} combinations)")
                         
                         # Apply appropriate styling based on dataset type
-                        if is_combined_dataset_data(data):
-                            # Style cross-population results with multiple prevalence columns
-                            styled_df = results_df.style.background_gradient(
-                                cmap='YlOrRd',
-                                subset=['CPRD %', 'SAIL %', 'Both %']
-                            )
-                        else:
-                            # Style single-population results (original behavior)
-                            styled_df = results_df.style.background_gradient(
-                                cmap='YlOrRd',
-                                subset=['Prevalence of the combination (%)']
-                            )
+                        styled_df = results_df.style.background_gradient(
+                            cmap='YlOrRd',
+                            subset=['CPRD %', 'SAIL %', 'Both %']
+                        )
                         
                         st.dataframe(styled_df)
 
@@ -333,18 +325,10 @@ def render_combinations_tab(data):
                 st.subheader(f"Analysis Results ({len(results_df)} combinations)")
                 
                 # Apply appropriate styling based on dataset type
-                if is_combined_dataset_data(data):
-                    # Style cross-population results with multiple prevalence columns
-                    styled_df = results_df.style.background_gradient(
-                        cmap='YlOrRd',
-                        subset=['CPRD %', 'SAIL %', 'Both %']
-                    )
-                else:
-                    # Style single-population results (original behavior)
-                    styled_df = results_df.style.background_gradient(
-                        cmap='YlOrRd',
-                        subset=['Prevalence of the combination (%)']
-                    )
+                styled_df = results_df.style.background_gradient(
+                    cmap='YlOrRd',
+                    subset=['Prevalence of the combination (%)']
+                )
                 
                 st.dataframe(styled_df)
 
